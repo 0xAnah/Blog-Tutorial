@@ -4,6 +4,10 @@ from django.conf import settings
 
 # Create your models here.
 
+class PublishedManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(status='Published')
+
 class Post(models.Model):
     class Status(models.TextChoices):
         DRAFT = 'DR', 'Draft'
@@ -17,6 +21,9 @@ class Post(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=2, choices=Status, default=Status.DRAFT)
+    # models managers
+    objects = models.Manager()      #default manager
+    published = PublishedManager()  #published manager
 
     class Meta:
         ordering = ['-publish']
