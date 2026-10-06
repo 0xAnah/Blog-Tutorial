@@ -6,7 +6,7 @@ from .models import Post
 
 def post_list(request):
     posts = Post.published.all()
-    context = {'post':posts}
+    context = {'posts':posts}
     return render(request, 'blog/post/list.html', context)
 
 def post_detail(request, id):
@@ -15,5 +15,5 @@ def post_detail(request, id):
     except Post.DoesNotExist():
         raise Http404("No post found")
     context = {'post': post}
-    return render(request, 'blog/post/details.html', context)
+    return render(request, 'blog/post/detail.html', context)
     
