@@ -1,8 +1,9 @@
+from django.views.decorators.http import require_POST
+from .forms import EmailPostForm, CommentForm
 from django.core.paginator import Paginator
 from django.views.generic import ListView
 from django.core.mail import send_mail
 from django.shortcuts import render
-from .forms import EmailPostForm
 from django.http import Http404
 from .models import Post
 
@@ -31,7 +32,11 @@ def post_detail(request, year, month, day, post):
         post = Post.published.get(publish__year=year, publish__month=month, publish__day=day, slug=post)
     except Post.DoesNotExist():
         raise Http404("No post found")
-    context = {'post': post}
+    # List of active comments for this post
+    comments = post.comments.filter(active=True)
+    # Form for users to comment
+    form = CommentForm()
+    context = {'post': post, 'comments':comments, 'form': form}
     return render(request, 'blog/post/detail.html', context)
 
 def post_share(request, post_id):
@@ -58,4 +63,23 @@ def post_share(request, post_id):
 
     context = {'form':form, 'post':post, 'sent': sent}
     return render(request, 'blog/post/share.html', context)
+
+@require_POST
+def post_comment(request, post_id):
+    try:
+        post = Post.published.get(id=post_id)
+    except Post.DoesNotExist():
+        raise Http404('No post found')
+    comment = None
+    # A comment was posted
+    form = CommentForm(data=request.POST)
+    if form.is_valid():
+        # Create a Comment object without saving it to the data
+        comment = form.save(commit=False)
+        # Assign the post to the comment
+        comment.post = post
+        # Save the comment to the database
+        comment.save()
+    
+    return render(request, 'blog/post/comment.html', {'post': post, 'form': form,'comment': comment})
     
